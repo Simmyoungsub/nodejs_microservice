@@ -4,8 +4,15 @@ const conn = {
     port: '3306',
     user: 'monolithic',
     password: 'monolithic',
-    database: 'monolithic'
+    database: 'monolithic',
+    multipleStatements: true
 };
+
+const redis = require('redis').createClient(6379, '192.168.122.128');
+
+redis.on('error', (err) => {
+    console.log(`Redis Error ${err}`);
+})
 
 exports.onRequest = ((res, method, pathname, params, cb) => {
     switch (method) {
@@ -28,6 +35,7 @@ exports.onRequest = ((res, method, pathname, params, cb) => {
 
 const register = ((method, pathname, params, cb) => {
     const response = {
+        key: params.key,
         errorcode: 0,
         errormessage: 'success'
     };
@@ -39,12 +47,15 @@ const register = ((method, pathname, params, cb) => {
     } else {
         const connection = mysql.createConnection(conn);
         connection.connect();
-        connection.query('insert into goods (name, category, price, description) values (?, ?, ?, ?)',
+        connection.query('insert into goods (name, category, price, description) values (?, ?, ?, ?); select LAST_INSERT_ID() as id;',
         [params.name, params.category, params.price, params.description],
         (error, results, fields) => {
             if (error) {
                 response.errorcode = 1;
                 response.errormessage = error;
+            } else {
+                const id = results[1][0].id;
+                redis.set(id, JSON.stringify(params));
             }
 
             cb(response);
@@ -55,6 +66,7 @@ const register = ((method, pathname, params, cb) => {
 
 const inquiry = ((method, pathname, params, cb) => {
     const response = {
+        key: params.key,
         errorcode: 0,
         errormessage: 'success'
     };
@@ -77,6 +89,7 @@ const inquiry = ((method, pathname, params, cb) => {
 
 const unregister = ((method, pathname, params, cb) => {
     const response = {
+        key: params.key,
         errorcode: 0,
         errormessage: 'success'
     };
@@ -94,6 +107,8 @@ const unregister = ((method, pathname, params, cb) => {
             if (error) {
                 response.errorcode = 1;
                 response.errormessage = error;
+            }else {
+                redis.del(params.id);
             }
 
             cb(response);
