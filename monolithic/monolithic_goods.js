@@ -1,3 +1,12 @@
+const mysql = require('mysql');
+const conn = {
+    host: '192.168.122.128',
+    port: '3306',
+    user: 'monolithic',
+    password: 'monolithic',
+    database: 'monolithic'
+};
+
 exports.onRequest = ((res, method, pathname, params, cb) => {
     switch (method) {
         case 'POST':
