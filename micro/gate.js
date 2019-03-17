@@ -31,7 +31,7 @@ const server = http.createServer((req, res) => {
             }else {
                 params = querystring.parse(body);
             }
-            console.log(params);
+        
             onRequest(res, method, pathname, params);
         });
     }else {
@@ -101,7 +101,7 @@ const onRequest = ((res, method, pathname, params) => {
     }
 
     mapRR[key]++;
-    client[mapRR[key] % client.length].write(packet);
+    client[mapRR[key] % client.length].write(packet); // 동일한 API 서버가 여러대 떠있는 경우 RR(라운드로빈)형식으로 돌아가면서 사용
 });
 
 const onDistribute = ((data) => {
@@ -124,7 +124,7 @@ const onDistribute = ((data) => {
                 }
                 mapUrls[k].push(client);
             }
-            console.log('connect');
+            
             client.connect();
         }
     }

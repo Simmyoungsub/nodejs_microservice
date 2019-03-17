@@ -1,6 +1,7 @@
 'use strict';
 
 const business = require('../monolithic/monolithic_goods');
+const cluster = require('cluster');
 const SEPERATOR = require('./seperator')();
 
 class goods extends require('./server') {
@@ -24,4 +25,13 @@ class goods extends require('./server') {
     }
 }
 
-new goods();
+if (cluster.isMaster) {
+    cluster.fork();
+
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`worker ${worker.process.pid} died`);
+        cluster.fork();
+    });
+}else {
+    new goods();
+}

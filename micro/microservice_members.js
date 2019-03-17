@@ -2,6 +2,7 @@
 
 const business = require('../monolithic/monolithic_members');
 const SEPERATOR = require('./seperator')();
+const cluster = require('cluster');
 
 class members extends require('./server') {
     constructor () {
@@ -18,10 +19,20 @@ class members extends require('./server') {
 
     onRead(socket, data) {
         console.log('onRead', socket.remoteAddress, socket.remotePort, data);
+        console.log(`${this.context.port} Service`);
         business.onRequest(socket, data.method, data.uri, data.params, (s, packet) => {
             socket.write(`${JSON.stringify(packet)}${SEPERATOR}`);
         });
     }
 }
 
-new members();
+if (cluster.isMaster) {
+    cluster.fork();
+
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`worker ${worker.process.pid} died`);
+        cluster.fork();
+    });
+} else {
+    new members();
+}
