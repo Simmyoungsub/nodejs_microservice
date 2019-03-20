@@ -1,1 +1,6 @@
-# nodejs_microservice
+# Micro Service
+
+- 모놀리식 구성을 마이크로 서비스로 전환시켜보기
+
+- 참고 서적
+-- Node.js 마이크로서비스 코딩 공작소
